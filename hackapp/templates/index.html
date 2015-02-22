@@ -1,0 +1,154 @@
+ <html>
+    <head>
+      <title>Doctor</title>
+
+      <link type="text/css" rel="stylesheet" href="/static/css/materialize.min.css"  media="screen,projection"/>
+      <link type="text/css" rel="stylesheet" href="/static/css/styles.css"/>
+      <link type="text/css" rel="stylesheet" href="/static/css/pen.css"/>
+    </head>
+
+    <body>
+     <nav>
+        <div class="nav-wrapper cyan">
+          <a href="/main/" class="brand-logo"><img style="height:65%; margin: 5.7%;"src="/static/img/doctor.png"></a>
+          <ul id="nav-mobile" class="right side-nav">
+            {% for curfile in files %}
+                <li><a href="/main/{{ curfile.0 }}/">{{ curfile.1 }}<i style="font-size:15px;" class="mdi-navigation-close right"></i></a></li>
+            {% endfor %}
+            <li><a href="/logout/">Logout ({{ username }})</a></li>
+          </ul>
+        </div>
+    </nav>
+      
+      <div class="row no-margin">
+        <div class="input-field col s12">
+          <input type="text" class="validate" id="title" value="{{ title }}">
+          <label>Title</label>
+        </div>
+        <div class="row no-margin">
+          <div class="col s6">
+            <div id="editor" data-toggle="pen" data-placeholder="Commonfolk understand little about these magic boxes, often going to extensive lengths to avoid interacting directly with them. For example, some resort to making use of prefabricated automagical blogging platforms such as WordPress, Joomla and Ghost to stay away from the InterWeb Magic known as the Holy Tempest of Mystic Light (HTML).">
+                {{ markdown }}
+            </div>
+          </div>
+          <div class="col s6 row" id="preview">
+
+          </div>
+
+        </div>
+      </div>
+
+      <div id="loadarea"><!-- ajax the anchor tags here --></div>
+
+      <script type="text/javascript" src="/static/js/jquery-2.1.3.min.js"></script>
+      <script type="text/javascript" src="/static/js/materialize.min.js"></script>
+      <script type="text/javascript" src="/static/js/pen.js"></script>
+      <script type="text/javascript" src="/static/js/markdown.js"></script>
+      <script src="/static/js/jquery.cookie.js"></script>
+
+      <script>
+        var saved = 1;
+        var cururl = "";
+        function htmlDecode(input){
+          var e = document.createElement('div');
+          e.innerHTML = input;
+          return e.childNodes.length === 0 ? "" : e.childNodes[0].nodeValue;
+        }
+        function add_links(linklist) {
+            links = JSON.parse(linklist);
+            for (var i = 0; i < links.length; i++) {
+                var url = links[i][1];
+                var title = links[i][0];
+                if (i == 0) $("#preview").html("<div class='card col s12'><div class='card-content'><p><a href='" + url + "'>" + title + "</a></p></div></div>");
+                else $("#preview").append("<div class='card col s12'><div class='card-content'><p><a href='" + url + "'>" + title + "</p></div></div>");
+            }
+            return;
+        }
+        function autosave() {
+            if (saved == 1) return;
+            else {
+                saved = 1;
+                if (cururl == "") {
+                    $.post("/ajax/create_essay/", {
+                        'title': $("#title").val(),
+                        'markdown': $("#editor").html(),
+                        'csrfmiddlewaretoken': $.cookie("csrftoken"),
+                    }).done(function(e) {
+                        cururl = e;
+                        saved = 1;
+                        $.post("/ajax/edit_markdown/" + cururl + "/", {
+                            'title': $("#title").val(),
+                            'markdown': $("#editor").html(),
+                            'csrfmiddlewaretoken': $.cookie("csrftoken"),
+                        }).done(function(e) {
+                            add_links(e);
+                        });
+                    });
+                }
+                else {
+                    $.post("/ajax/edit_markdown/" + cururl + "/", {
+                        'title': $("#title").val(),
+                        'markdown': $("#editor").html(),
+                        'csrfmiddlewaretoken': $.cookie("csrftoken"),
+                    }).done(function(e) {
+                        add_links(e);
+                    });
+                    $("#title").css("border-bottom-color", "green");
+                }
+            }
+        }
+        $(document).ready(function() {
+            cururl = "{{ url }}";
+           $("#editor").html(htmlDecode($("#editor").html())); 
+           $("#editor").css("opacity",0);
+            var options = {
+              editor: document.querySelector('[data-toggle="pen"]'),
+              debug: true,
+              list: [
+                'insertimage', 'blockquote', 'h2', 'h3', 'p', 'insertorderedlist', 'insertunorderedlist', 'inserthorizontalrule',
+                'indent', 'outdent', 'bold', 'italic', 'underline', 'createlink'
+              ]
+            };
+            setInterval(autosave, 5000);
+            // create editor
+            var pen = window.pen = new Pen(options);
+            pen.focus();
+        });
+        
+        function stuffChanged() {
+            saved = 0;
+            $("#title").css("border-bottom-color", "red");
+        }
+        
+        $("#title").on("input", stuffChanged);
+        $("#editor").on("input", stuffChanged);
+        
+        $(window).on("resize load",function(){
+          $("#editor").height($(window).height()-$("#title").parent().outerHeight()-17);
+        });
+
+        $(document).ready(function(){
+          $("#editor").animate({opacity: 1.0}, 500);
+          $("i.mdi-navigation-close").click(function(e) {
+              e.preventDefault();
+              e.stopPropagation();
+              var fetchedurl = $(this).parent().attr('href');
+              fetchedurl = fetchedurl.substr(6, fetchedurl.length - 7);
+             $.post("/ajax/delete_essay/" + fetchedurl + "/", {
+                 'csrfmiddlewaretoken': $.cookie("csrftoken"),
+             }).done(function(e) {
+                 window.location.href="/main/";
+             })
+          });
+        });
+
+        function fetchKinsung() {
+          $.post("ajax.php", function(paradox){
+            var thing = $("#preview").append(paradox).animate({ scrollTop: $("#preview")[0].scrollHeight}, 5000);
+          });
+        }
+
+        window.setTimeout(fetchKinsung, 2000);
+      </script>
+    </body>
+  </html>

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <title>Doctor</title>
+	<script type="text/javascript" src="/static/js/jquery-2.1.3.min.js"></script>
+    <script src="/static/js/jquery.cookie.js"></script>
+    <script>
+        $(document).ready(function() {
+            $("#loginButton").click(function() {
+                $.post("/ajax/login/", {
+                    'username': $("#email").val(),
+                    'password': $("#password").val(),
+                    'csrfmiddlewaretoken': $.cookie("csrftoken"),
+                }).done(function(e) {
+                   if (e == "OK.") window.location.href="/main/";
+                   else $("#password").val("");
+                });
+            });
+        });
+    </script>
+    <link href="/static/css/materialize.min.css" type="text/css" rel='stylesheet'>
+    <link href="/static/css/styles.css" type="text/css" rel="stylesheet">
+    <style>
+		input[type=text], input[type=password], input[type=email], input[type=date], input[type=tel], input[type=number], textarea.materialize-textarea{
+			border-bottom: 1px solid #fff;
+			font-size:2rem;
+			height:5rem;
+		}
+		.input-field label{
+			color:#fff;
+			font-size:1rem;
+		}
+		input[type=text]:focus, input[type=password]:focus, input[type=email]:focus, input[type=date]:focus, input[type=tel]:focus, input[type=number]:focus, textarea:focus.materialize-textarea{
+			border-bottom: 1px solid #fff;
+			-webkit-box-shadow: 0 1px 0 0 #fff;
+			-moz-box-shadow: 0 1px 0 0 #fff;
+			box-shadow: 0 1px 0 0 #fff;
+		}
+		.input-field input[type=text]:focus+label, .input-field input[type=password]:focus+label, .input-field input[type=email]:focus+label, .input-field input[type=date]:focus+label, .input-field input[type=tel]:focus+label, .input-field input[type=number]:focus+label, .input-field textarea:focus.materialize-textarea+label{
+			color:#fff;
+		}
+    </style>
+  </head>
+
+  <body class="cyan">
+  	<div class="container white-text">
+	  	<div class="row">
+	  		<h1 class="thin text-center"><img src="/static/img/doctor.png"></h1>
+	  	</div>
+		<div class="row">
+			<form class="col s12" autocomplete="off">
+			    <input type="text" style="display:none;">
+			    <input type="password" style="display:none;">
+				<div class="row">
+					<div class="input-field col s12">
+						<input type="text" id="email" pattern="/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,7}/" required>
+						<label for="email">Email</label>
+					</div>
+				</div>
+				
+				<div class="row">
+					<div class="input-field col s12">
+						<input type="password" id="password" >
+						<label for="password">Password</label>
+					</div>
+				</div>
+				<div class="row text-center">
+					<a href="#" class="waves-effect waves-light btn white blue-text" id="loginButton">CRASH</a>
+				</div>
+			</form>
+		</div>
+	</div>
+     <img src='static/img/dalek.png' id='dalek' class="flip">	
+    <script src="/static/js/materialize.min.js"></script>
+    <script src="/static/js/useless.js"></script>
+    <script>
+    	$("div.container").css("margin-top",($(window).height()-$("div.container").height())/2);
+    	$(document).ready(function(){
+    	    useless.dalekPatrol("right");
+    	});
+    	
+    	function getRandomInt(min, max) {
+          return Math.floor(Math.random() * (max - min)) + min;
+        }
+    </script>
+  </body>
+</html>
